@@ -4,7 +4,7 @@ from pets_data import Data
 connection = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="",
+    password="kush1234",
     database="PETS_DB"
 )
 cursor = connection.cursor()
