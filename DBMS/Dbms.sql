@@ -26,6 +26,11 @@ Amount_Payed VARCHAR(10) ,
 FOREIGN KEY(CustomerID) REFERENCES Customers(Customer_ID),
 FOREIGN KEY(PetID) REFERENCES Pets(Pet_ID)
 );
+
+-- ALTER TABLE Purchase  
+-- ADD COLUMN Payment_Method VARCHAR(25),  
+-- ADD COLUMN Payment_Date_and_Time VARCHAR(60);
+
 SELECT*FROM Pets;
 SELECT*FROM Customers;
 SELECT*FROM Purchase;
