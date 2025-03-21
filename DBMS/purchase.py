@@ -46,17 +46,17 @@ for date in random_dates:
     print(date.strftime("%Y-%m-%d %H:%M:%S"))
 
 payment_methods = ["Cash", "Credit Card", "Debit Card", "UPI"]
-# sql = '''
-# UPDATE Purchase 
-# SET Payment_Method = %s, Payment_Date_and_Time = %s
-# WHERE Transaction_ID = %s
-# '''
-# row_ids = list(range(1, 51))  # Target rows 1 to 50
+sql = '''
+UPDATE Purchase 
+SET Payment_Method = %s, Payment_Date_and_Time = %s
+WHERE Transaction_ID = %s
+'''
+row_ids = list(range(1, 51))  
 
-# for i, dates in enumerate(random_dates[:50]):  # Ensure we only use 50 dates
-#     payment = random.choice(payment_methods)
-#     val = (payment, dates, row_ids[i])  # Assign values to existing rows
-#     cursor.execute(sql, val)
+for i, dates in enumerate(random_dates[:50]):  
+    payment = random.choice(payment_methods)
+    val = (payment, dates, row_ids[i])  
+    cursor.execute(sql, val)
     
     
 # sql = """
