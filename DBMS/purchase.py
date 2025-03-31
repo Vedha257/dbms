@@ -1,83 +1,98 @@
 import mysql.connector
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 
-connection = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="vedh@1234",
-    database="PETS_DB"
-)
-cursor = connection.cursor()
+def generate_purchases():
+    # Database connection
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="vedh@1234",
+        database="PETS_DB"
+    )
+    cursor = conn.cursor(dictionary=True)
 
-# cursor.execute("SELECT Customer_ID FROM Customers")
-# customer_ids = [row[0] for row in cursor.fetchall()]
+    try:
+        # Fetch required data
+        cursor.execute("SELECT Customer_ID, Name FROM Customers")
+        customers = cursor.fetchall()
 
-# cursor.execute("SELECT Pet_ID FROM Pets")
-# pet_ids = [row[0] for row in cursor.fetchall()]
+        cursor.execute("SELECT Pet_ID, Pet_Name, Species, Price FROM Pets WHERE Price > 0")
+        pets = cursor.fetchall()
 
-# unique_pairs = set()
+        cursor.execute("SELECT Product_ID, Product_Name, Price, Stock FROM Products WHERE Stock > 0")
+        products = {row['Product_ID']: row for row in cursor.fetchall()}
 
-# while len(unique_pairs) < 50:
-#     customer_id = random.choice(customer_ids)
-#     pet_id = random.choice(pet_ids)
+        # Generate purchases
+        payment_methods = ["Cash", "Credit Card", "Debit Card", "UPI"]
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2025, 4, 1)
 
-#     if (customer_id, pet_id) not in unique_pairs:
-#         unique_pairs.add((customer_id, pet_id))
+        for _ in range(50):  # Generate 50 purchases
+            # Select random customer and payment method
+            customer = random.choice(customers)
+            payment_method = random.choice(payment_methods)
+            date = datetime.fromtimestamp(random.uniform(start_date.timestamp(), end_date.timestamp()))
 
+            # Initialize purchase details
+            pet_id = pet_name = species = None
+            product_id = product_name = None
+            quantity = 0
+            amount = 0.0
 
-def genDateTime(start_date, end_date, total) :
-    randomDates = [ ]
-    start = start_date.timestamp()
-    end = end_date.timestamp()
+            # Process pet purchase (50% chance)
+            if random.choice([True, False]) and pets:
+                pet = random.choice(pets)
+                pet_id, pet_name, species, pet_price = pet['Pet_ID'], pet['Pet_Name'], pet['Species'], float(pet['Price'])
+                amount += pet_price
 
-    for _ in range(total):
-        random_timestamp = random.uniform(start, end)
-        random_dates = datetime.fromtimestamp(random_timestamp)
-        randomDates.append(random_dates)
+            # Process product purchase (50% chance)
+            if random.random() < 0.5 and products:
+                available_products = [pid for pid in products if products[pid]['Stock'] > 0]
+                if available_products:
+                    product_id = random.choice(available_products)
+                    product = products[product_id]
+                    quantity = random.randint(1, min(5, product['Stock']))
+                    amount += float(product['Price']) * quantity
+                    product_name = product['Product_Name']
 
-    return randomDates
+                    # Update product stock
+                    cursor.execute(
+                        "UPDATE Products SET Stock = Stock - %s WHERE Product_ID = %s",
+                        (quantity, product_id)
+                    )
 
-start = datetime(2024,1,1)
-end = datetime(2025,4,1)
+            # Skip if nothing purchased
+            if amount == 0:
+                continue
 
-random_dates = genDateTime(start, end, 50)
-for date in random_dates:
-    print(date.strftime("%Y-%m-%d %H:%M:%S"))
+            # Insert purchase record
+            cursor.execute("""
+                INSERT INTO Purchase (
+                    CustomerID, Customer_Name,
+                    PetID, PetName, Species,
+                    ProductID, ProductName, Quantity,
+                    Amount_Payed, Payment_Method, Payment_Date_and_Time
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                customer['Customer_ID'],
+                customer['Name'],
+                pet_id,
+                pet_name,
+                species,
+                product_id,
+                product_name,
+                quantity if product_id else (1 if pet_id else 0),
+                amount,
+                payment_method,
+                date
+            ))
 
-payment_methods = ["Cash", "Credit Card", "Debit Card", "UPI"]
-sql = '''
-UPDATE Purchase
-SET Payment_Method = %s, Payment_Date_and_Time = %s
-WHERE Transaction_ID = %s
-'''
-row_ids = list(range(1, 51))
+        conn.commit()
 
-for i, dates in enumerate(random_dates[:50]):
-    payment = random.choice(payment_methods)
-    val = (payment, dates, row_ids[i])
-    cursor.execute(sql, val)
+    finally:
+        cursor.close()
+        conn.close()
 
-
-# sql = """
-# INSERT INTO Purchase(CustomerID, Customer_Name, PetID, PetName, Species, Amount_Payed)
-# SELECT c.Customer_ID, c.NAME, p.Pet_ID, p.Pet_Name, p.Species, p.Price
-# FROM Customers c, Pets p
-# WHERE c.Customer_ID = %s AND p.Pet_ID = %s
-# """
-
-# for customer_id, pet_id in unique_pairs:
-#     cursor.execute(sql, (customer_id, pet_id))
-
-
-
-
-connection.commit()
-print("Job Done!")
-
-
-
-cursor.close()
-connection.close()
-
-
+if __name__ == "__main__":
+    generate_purchases()

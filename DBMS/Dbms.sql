@@ -6,7 +6,7 @@ Species VARCHAR(20) NOT NULL,
 Pet_Name VARCHAR(20) NOT NULL,
 Breed VARCHAR(20) NOT NULL,
 Age INT NOT NULL,
-Price INT);
+Price INT NOT NULL);
 
 CREATE TABLE IF NOT EXISTS Customers(
 Customer_ID INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,5 +53,30 @@ SELECT*FROM Purchase;
 
 
 
+-- Run this entire block in your MySQL client:
+USE PETS_DB;
 
+-- Disable foreign key checks
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Clear tables in reverse dependency order
+TRUNCATE TABLE Purchase;
+TRUNCATE TABLE Products;
+TRUNCATE TABLE Pets;
+TRUNCATE TABLE Customers;
+
+-- Reset auto-increment counters
+ALTER TABLE Purchase AUTO_INCREMENT = 1;
+ALTER TABLE Products AUTO_INCREMENT = 1;
+ALTER TABLE Pets AUTO_INCREMENT = 1;
+ALTER TABLE Customers AUTO_INCREMENT = 1;
+
+-- Re-enable foreign key checks
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Verify tables are empty
+SELECT COUNT(*) FROM Purchase;
+SELECT COUNT(*) FROM Products;
+SELECT COUNT(*) FROM Pets;
+SELECT COUNT(*) FROM Customers;
 

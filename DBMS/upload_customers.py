@@ -8,11 +8,13 @@ connection = mysql.connector.connect(
     database="PETS_DB"
 )
 cursor = connection.cursor()
-sql = 'INSERT INTO Customers(NAME, CONTACT, EMAIL) VALUES (%s,%s,%s)'
+sql = 'INSERT INTO Customers(NAME, CONTACT, EMAIL, CITY) VALUES (%s, %s, %s, %s)'
+
 
 for x in data:
-    val = (x['name'],x['num'],x['email'])
-    cursor.execute(sql,val)
+    val = (x['name'], x['num'], x['email'], x.get('city', 'Unknown'))
+    cursor.execute(sql, val)
+
     
 connection.commit()
 print('Job Done!')
